@@ -792,6 +792,9 @@ def create_app():
                     cy = cytoscape({
                         container: document.getElementById('workflowGraph'),
                         elements: elements,
+                        minZoom: 0.1,
+                        maxZoom: 3,
+                        wheelSensitivity: 0.2,
                         style: [
                             {
                                 selector: 'node',
@@ -875,8 +878,9 @@ def create_app():
                 function zoomIn() {
                     if (cy) {
                         const currentZoom = cy.zoom();
+                        const newZoom = Math.min(currentZoom * 1.2, 3); // Max zoom 3x
                         cy.zoom({
-                            level: currentZoom * 1.2,
+                            level: newZoom,
                             renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
                         });
                     }
@@ -885,8 +889,9 @@ def create_app():
                 function zoomOut() {
                     if (cy) {
                         const currentZoom = cy.zoom();
+                        const newZoom = Math.max(currentZoom * 0.8, 0.1); // Min zoom 0.1x
                         cy.zoom({
-                            level: currentZoom * 0.8,
+                            level: newZoom,
                             renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
                         });
                     }
