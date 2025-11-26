@@ -334,6 +334,8 @@ def create_app():
                                             currentWorkflowData = JSON.parse(event.target.result);
                                             document.getElementById('jsonEditor').value = JSON.stringify(currentWorkflowData, null, 2);
                                             document.getElementById('runSimBtn').disabled = false;
+                                            // Render workflow graph
+                                            renderWorkflowGraph(currentWorkflowData);
                                         } catch (error) {
                                             document.getElementById('simStatus').innerHTML =
                                                 `<p style="color: #e74c3c;">Error parsing JSON: ${error.message}</p>`;
@@ -358,6 +360,8 @@ def create_app():
                                         document.getElementById('workflowFileName').textContent = `Loaded: ${example}.json`;
                                         document.getElementById('runSimBtn').disabled = false;
                                         document.getElementById('simStatus').innerHTML = '';
+                                        // Render workflow graph
+                                        renderWorkflowGraph(currentWorkflowData);
                                     } catch (error) {
                                         document.getElementById('simStatus').innerHTML =
                                             `<p style="color: #e74c3c;">Error loading example: ${error.message}</p>`;
@@ -833,27 +837,6 @@ def create_app():
                         legendDiv.appendChild(item);
                     });
                 }
-
-                // Hook into the workflow loader
-                const originalWorkflowHandler = document.getElementById('workflowInput').onchange;
-                document.getElementById('workflowInput').addEventListener('change', function(e) {
-                    // Wait a bit for currentWorkflowData to be set
-                    setTimeout(() => {
-                        if (currentWorkflowData) {
-                            renderWorkflowGraph(currentWorkflowData);
-                        }
-                    }, 100);
-                });
-
-                const originalExampleHandler = document.getElementById('exampleSelect').onchange;
-                document.getElementById('exampleSelect').addEventListener('change', function(e) {
-                    // Wait for the example to load
-                    setTimeout(() => {
-                        if (currentWorkflowData) {
-                            renderWorkflowGraph(currentWorkflowData);
-                        }
-                    }, 500);
-                });
             </script>
         </body>
         </html>
