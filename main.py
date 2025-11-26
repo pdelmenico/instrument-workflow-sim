@@ -907,26 +907,18 @@ def create_app():
                         legendDiv.appendChild(item);
                     });
 
-                    // Store initial zoom and pan after layout, ensuring it respects limits
+                    // Set explicit starting zoom level for consistency
                     setTimeout(() => {
-                        const currentZoom = cy.zoom();
+                        const DEFAULT_ZOOM = 0.5; // Safe starting zoom for all workflows
                         const MIN_ZOOM = 0.3;
                         const MAX_ZOOM = 3;
 
-                        // If initial zoom is below minimum, adjust it
-                        if (currentZoom < MIN_ZOOM) {
-                            cy.zoom({
-                                level: MIN_ZOOM,
-                                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-                            });
-                            cy.center();
-                        } else if (currentZoom > MAX_ZOOM) {
-                            cy.zoom({
-                                level: MAX_ZOOM,
-                                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
-                            });
-                            cy.center();
-                        }
+                        // Always start at default zoom level
+                        cy.zoom({
+                            level: DEFAULT_ZOOM,
+                            renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                        });
+                        cy.center();
 
                         initialZoom = cy.zoom();
                         initialPan = { ...cy.pan() };
