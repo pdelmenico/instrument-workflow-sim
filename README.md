@@ -2,11 +2,11 @@
 
 Discrete-event simulation engine for diagnostic and clinical chemistry instrument workflow timing analysis.
 
-## Project Status: Week 1 Complete ✅
+## Project Status: Week 2 Complete ✅
 
-**Implementation:** Phase 1a - Week 1 (Core Classes)
-**Test Coverage:** 95% (117 tests passing)
-**Status:** Ready for Week 2 (SimPy Integration)
+**Implementation:** Phase 1a - Weeks 1 & 2 (Core Classes + SimPy Integration)
+**Test Coverage:** 96% (144 tests passing)
+**Status:** Ready for Week 3 (API + Advanced Statistics)
 
 ## What's Been Built
 
@@ -29,12 +29,21 @@ Discrete-event simulation engine for diagnostic and clinical chemistry instrumen
    - `WorkflowValidator` - Validates workflow JSON (schema, DAG, references)
    - `ScenarioValidator` - Validates scenario configurations
 
+4. **core.py** - SimPy simulation engine (NEW in Week 2!)
+   - `SimulationEngine` - Discrete-event simulation orchestration
+   - Resource management with SimPy
+   - Sample process coroutines
+   - Event logging during execution
+   - Deterministic simulations with random seeds
+   - Support for device contention and queuing
+
 ### Test Suite
 
 - **23 tests** for data models
 - **29 tests** for timing distributions
 - **65 tests** for validators
-- **Total: 117 tests** with 95% code coverage
+- **27 tests** for simulation engine (NEW!)
+- **Total: 144 tests** with 96% code coverage
 
 ## Installation
 
@@ -215,17 +224,22 @@ Stochastic processes with high variability.
 | models.py | 76 | 97% |
 | timing.py | 45 | 100% |
 | validators.py | 205 | 93% |
-| **Total** | **326** | **95%** |
+| core.py | 97 | 99% |
+| **Total** | **423** | **96%** |
 
-## Next Steps - Week 2
+## Next Steps - Week 3
 
-Implement SimPy integration (simulation engine):
+Implement Flask API and advanced statistics:
 
-1. Create `src/simulation/core.py` with `SimulationEngine` class
-2. Implement SimPy resource management
-3. Implement sample process coroutines
-4. Implement event logging
-5. Add integration tests for single-sample and batch simulations
+1. Create Flask REST API endpoints (POST /api/simulate)
+2. Implement full statistics computation in _compute_summary()
+   - Device utilization calculation
+   - Queue statistics (max queue length, average wait time)
+   - Operation statistics (mean, stdev, min, max, median)
+   - Bottleneck identification
+3. Add example workflow JSON files
+4. Create API integration tests
+5. Deploy to Railway (optional)
 
 ## Development Commands
 
