@@ -863,8 +863,12 @@ def create_app():
                         });
                     });
 
-                    // Enforce zoom limits on all zoom operations
+                    // Enforce zoom limits more aggressively
+                    // Store the last valid zoom/pan state
+                    let lastValidZoom = cy.zoom();
+                    let lastValidPan = cy.pan();
                     let isAdjustingZoom = false;
+
                     cy.on('zoom', function(evt) {
                         if (isAdjustingZoom) return;
 
@@ -874,21 +878,25 @@ def create_app():
 
                         if (currentZoom > MAX_ZOOM || currentZoom < MIN_ZOOM) {
                             isAdjustingZoom = true;
+
+                            // Clamp to limits
                             const clampedZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, currentZoom));
 
-                            // Get current viewport center
-                            const pan = cy.pan();
-                            const extent = cy.extent();
-                            const centerX = (extent.x1 + extent.x2) / 2;
-                            const centerY = (extent.y1 + extent.y2) / 2;
-
-                            // Set zoom to clamped value
+                            // Restore to last valid state immediately
                             cy.viewport({
                                 zoom: clampedZoom,
-                                pan: pan
+                                pan: lastValidPan
                             });
 
+                            // Force redraw
+                            cy.resize();
+                            cy.forceRender();
+
                             isAdjustingZoom = false;
+                        } else {
+                            // Update last valid state
+                            lastValidZoom = currentZoom;
+                            lastValidPan = cy.pan();
                         }
                     });
 
