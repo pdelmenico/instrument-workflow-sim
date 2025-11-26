@@ -481,6 +481,10 @@ def create_app():
                                 <button class="graph-control-btn" onclick="zoomOut()">🔍− Zoom Out</button>
                                 <button class="graph-control-btn" onclick="fitGraph()">⊡ Fit to Screen</button>
                                 <button class="graph-control-btn" onclick="resetGraph()">↻ Reset</button>
+                                <span style="margin: 0 12px; color: #7f8c8d;">|</span>
+                                <button class="graph-control-btn" onclick="applyLayout('vertical')">↓ Vertical</button>
+                                <button class="graph-control-btn" onclick="applyLayout('horizontal')">→ Horizontal</button>
+                                <button class="graph-control-btn" onclick="applyLayout('serpentine')">⤵ Serpentine</button>
                             </div>
                             <div id="workflowGraph" style="display: none;"></div>
                             <div id="graphLegend" class="graph-legend" style="display: none;"></div>
@@ -836,7 +840,7 @@ def create_app():
                         ],
                         layout: {
                             name: 'dagre',
-                            rankDir: 'LR',
+                            rankDir: 'TB',  // Always start with TB (works reliably)
                             nodeSep: 50,
                             rankSep: 80,
                             padding: 30
@@ -1035,6 +1039,75 @@ def create_app():
                             cy.center();
                         }
                     }
+                }
+
+                // Layout customization functions
+                function applyLayout(layoutType) {
+                    if (!cy) return;
+
+                    const nodesPerRow = 6; // Configurable nodes per row for horizontal/serpentine
+
+                    if (layoutType === 'vertical') {
+                        // Reapply TB dagre layout
+                        cy.layout({
+                            name: 'dagre',
+                            rankDir: 'TB',
+                            nodeSep: 50,
+                            rankSep: 80,
+                            padding: 30
+                        }).run();
+
+                    } else if (layoutType === 'horizontal') {
+                        // Manual horizontal layout in rows
+                        const nodes = cy.nodes().sort((a, b) => {
+                            // Sort by topological order based on workflow sequence
+                            return a.id().localeCompare(b.id());
+                        });
+
+                        const nodeWidth = 200;
+                        const nodeHeight = 100;
+                        const horizontalSpacing = 80;
+                        const verticalSpacing = 120;
+
+                        nodes.forEach((node, index) => {
+                            const row = Math.floor(index / nodesPerRow);
+                            const col = index % nodesPerRow;
+
+                            node.position({
+                                x: col * (nodeWidth + horizontalSpacing),
+                                y: row * (nodeHeight + verticalSpacing)
+                            });
+                        });
+
+                    } else if (layoutType === 'serpentine') {
+                        // Serpentine/boustrophedon layout (zig-zag)
+                        const nodes = cy.nodes().sort((a, b) => {
+                            return a.id().localeCompare(b.id());
+                        });
+
+                        const nodeWidth = 200;
+                        const nodeHeight = 100;
+                        const horizontalSpacing = 80;
+                        const verticalSpacing = 120;
+
+                        nodes.forEach((node, index) => {
+                            const row = Math.floor(index / nodesPerRow);
+                            const colIndex = index % nodesPerRow;
+
+                            // Alternate direction on odd rows
+                            const col = (row % 2 === 0) ? colIndex : (nodesPerRow - 1 - colIndex);
+
+                            node.position({
+                                x: col * (nodeWidth + horizontalSpacing),
+                                y: row * (nodeHeight + verticalSpacing)
+                            });
+                        });
+                    }
+
+                    // Fit and reset zoom after layout change
+                    setTimeout(() => {
+                        fitGraph();
+                    }, 100);
                 }
             </script>
         </body>
