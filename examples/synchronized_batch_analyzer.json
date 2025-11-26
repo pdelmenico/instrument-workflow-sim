@@ -1,0 +1,140 @@
+{
+  "workflow": {
+    "workflow_id": "synchronized-batch-analyzer",
+    "workflow_name": "Chemistry Panel - Synchronized Batch",
+    "workflow_version": "1.0",
+    "description": "3-sample synchronized batch on chemistry analyzer. Tests device contention and queuing.",
+    "devices": [
+      {
+        "device_id": "autosampler",
+        "device_name": "96-Well Autosampler",
+        "resource_capacity": 1,
+        "scheduling_policy": "FIFO"
+      },
+      {
+        "device_id": "centrifuge",
+        "device_name": "Centrifuge",
+        "resource_capacity": 1,
+        "scheduling_policy": "FIFO"
+      },
+      {
+        "device_id": "analyzer",
+        "device_name": "Chemistry Analyzer",
+        "resource_capacity": 2,
+        "scheduling_policy": "FIFO"
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "position_sample",
+        "operation_name": "Position Sample in Autosampler",
+        "device_id": "autosampler",
+        "timing": {
+          "type": "fixed",
+          "value": 3.0
+        },
+        "operation_type": "setup"
+      },
+      {
+        "operation_id": "centrifuge_spin",
+        "operation_name": "Centrifuge Sample",
+        "device_id": "centrifuge",
+        "timing": {
+          "type": "fixed",
+          "value": 120.0
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "aspirate",
+        "operation_name": "Aspirate Sample",
+        "device_id": "analyzer",
+        "timing": {
+          "type": "triangular",
+          "min": 10.0,
+          "mode": 12.0,
+          "max": 15.0
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "dispense_reagent",
+        "operation_name": "Dispense Reagent",
+        "device_id": "analyzer",
+        "timing": {
+          "type": "triangular",
+          "min": 8.0,
+          "mode": 10.0,
+          "max": 12.0
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "incubate",
+        "operation_name": "Incubation",
+        "device_id": "analyzer",
+        "timing": {
+          "type": "fixed",
+          "value": 180.0
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "measure",
+        "operation_name": "Measure Absorbance",
+        "device_id": "analyzer",
+        "timing": {
+          "type": "triangular",
+          "min": 3.0,
+          "mode": 4.0,
+          "max": 5.0
+        },
+        "operation_type": "processing"
+      }
+    ],
+    "base_sequence": [
+      {
+        "sequence_id": 1,
+        "operation_id": "position_sample",
+        "predecessors": []
+      },
+      {
+        "sequence_id": 2,
+        "operation_id": "centrifuge_spin",
+        "predecessors": ["position_sample"]
+      },
+      {
+        "sequence_id": 3,
+        "operation_id": "aspirate",
+        "predecessors": ["centrifuge_spin"]
+      },
+      {
+        "sequence_id": 4,
+        "operation_id": "dispense_reagent",
+        "predecessors": ["aspirate"]
+      },
+      {
+        "sequence_id": 5,
+        "operation_id": "incubate",
+        "predecessors": ["dispense_reagent"]
+      },
+      {
+        "sequence_id": 6,
+        "operation_id": "measure",
+        "predecessors": ["incubate"]
+      }
+    ]
+  },
+  "scenario": {
+    "scenario_id": "analyzer-batch-3samples",
+    "scenario_name": "Chemistry Analyzer - 3 Sample Batch",
+    "workflow_id": "synchronized-batch-analyzer",
+    "sample_entry_pattern": {
+      "pattern_type": "synchronized",
+      "num_samples": 3
+    },
+    "simulation_config": {
+      "random_seed": 123
+    }
+  }
+}

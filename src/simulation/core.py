@@ -268,17 +268,16 @@ class SimulationEngine:
     def _compute_summary(self) -> SimulationSummary:
         """Compute summary statistics from event log.
 
-        This is a stub implementation for Week 2. Week 3 will implement
-        full statistics computation including:
-        - Device utilization
-        - Queue statistics
-        - Operation duration statistics
-        - Bottleneck identification
+        Computes comprehensive statistics including:
+        - Device utilization (fraction of time device was busy)
+        - Queue statistics (max queue length, average wait time)
+        - Operation duration statistics (mean, stdev, min, max, median)
+        - Operation wait time statistics
+        - Bottleneck identification (device with highest utilization)
 
         Returns:
-            SimulationSummary with basic statistics
+            SimulationSummary with complete statistics
         """
-        # Basic statistics for Week 2
         total_time = self.env.now
         num_completed = len(self._sample_end_times)
         num_failed = 0
@@ -296,29 +295,103 @@ class SimulationEngine:
 
         throughput = num_completed / total_time if total_time > 0 else 0.0
 
-        # Stub data structures (will be computed properly in Week 3)
-        device_utilization = {
-            device['device_id']: 0.0
-            for device in self.workflow['devices']
-        }
+        # Compute device utilization
+        device_utilization = {}
+        for device in self.workflow['devices']:
+            device_id = device['device_id']
+            capacity = device['resource_capacity']
 
-        device_queue_stats = {
-            device['device_id']: DeviceQueueStats()
-            for device in self.workflow['devices']
-        }
+            # Sum up all COMPLETE event durations for this device
+            device_events = [e for e in self.event_log
+                           if e.device_id == device_id and e.event_type == "COMPLETE"]
+            total_busy_time = sum(e.duration for e in device_events)
 
-        operation_stats = {
-            op['operation_id']: OperationStats()
-            for op in self.workflow['operations']
-        }
+            # Utilization is total busy time divided by (capacity × total time)
+            # This gives utilization as a fraction between 0 and 1
+            max_possible_time = capacity * total_time
+            utilization = total_busy_time / max_possible_time if max_possible_time > 0 else 0.0
+            device_utilization[device_id] = utilization
 
-        operation_wait_times = {
-            op['operation_id']: OperationWaitStats()
-            for op in self.workflow['operations']
-        }
+        # Compute queue statistics per device
+        device_queue_stats = {}
+        for device in self.workflow['devices']:
+            device_id = device['device_id']
 
-        # Simple bottleneck identification (first device for now)
-        bottleneck_device = self.workflow['devices'][0]['device_id'] if self.workflow['devices'] else ""
+            # Get all QUEUED events for this device
+            queued_events = [e for e in self.event_log
+                           if e.device_id == device_id and e.event_type == "QUEUED"]
+
+            # Get all START events with wait times for this device
+            start_events = [e for e in self.event_log
+                          if e.device_id == device_id and e.event_type == "START"]
+
+            max_queue_length = max((e.device_queue_length for e in queued_events), default=0)
+
+            wait_times = [e.wait_time for e in start_events if e.wait_time > 0]
+            avg_queue_time = np.mean(wait_times) if wait_times else 0.0
+            total_queue_time = sum(wait_times)
+            queue_events = len(wait_times)
+
+            device_queue_stats[device_id] = DeviceQueueStats(
+                max_queue_length=max_queue_length,
+                avg_queue_time=avg_queue_time,
+                total_queue_time=total_queue_time,
+                queue_events=queue_events
+            )
+
+        # Compute operation statistics
+        operation_stats = {}
+        for operation in self.workflow['operations']:
+            op_id = operation['operation_id']
+
+            # Get all COMPLETE events for this operation
+            complete_events = [e for e in self.event_log
+                             if e.operation_id == op_id and e.event_type == "COMPLETE"]
+
+            durations = [e.duration for e in complete_events]
+
+            if durations:
+                operation_stats[op_id] = OperationStats(
+                    mean_duration=float(np.mean(durations)),
+                    stdev_duration=float(np.std(durations)),
+                    min_duration=float(np.min(durations)),
+                    max_duration=float(np.max(durations)),
+                    median_duration=float(np.median(durations)),
+                    sample_count=len(durations)
+                )
+            else:
+                operation_stats[op_id] = OperationStats()
+
+        # Compute operation wait time statistics
+        operation_wait_times = {}
+        for operation in self.workflow['operations']:
+            op_id = operation['operation_id']
+
+            # Get all START events for this operation
+            start_events = [e for e in self.event_log
+                          if e.operation_id == op_id and e.event_type == "START"]
+
+            wait_times = [e.wait_time for e in start_events if e.wait_time > 0]
+
+            mean_wait = float(np.mean(wait_times)) if wait_times else 0.0
+            total_wait = sum(wait_times)
+            wait_events = len(wait_times)
+
+            operation_wait_times[op_id] = OperationWaitStats(
+                mean_wait=mean_wait,
+                total_wait=total_wait,
+                wait_events=wait_events
+            )
+
+        # Identify bottleneck device (highest utilization)
+        if device_utilization:
+            bottleneck_device = max(device_utilization.items(), key=lambda x: x[1])[0]
+            bottleneck_utilization = device_utilization[bottleneck_device]
+            bottleneck_queue_delay = device_queue_stats[bottleneck_device].avg_queue_time
+        else:
+            bottleneck_device = ""
+            bottleneck_utilization = 0.0
+            bottleneck_queue_delay = 0.0
 
         summary = SimulationSummary(
             total_simulation_time=total_time,
@@ -333,12 +406,13 @@ class SimulationEngine:
             min_sample_cycle_time=min_cycle_time,
             max_sample_cycle_time=max_cycle_time,
             bottleneck_device=bottleneck_device,
-            bottleneck_utilization=0.0
+            bottleneck_utilization=bottleneck_utilization,
+            bottleneck_queue_delay=bottleneck_queue_delay
         )
 
         logger.info(
             f"Summary: {num_completed} samples completed in {total_time:.2f}s "
-            f"(throughput: {throughput:.6f} samples/sec)"
+            f"(throughput: {throughput:.6f} samples/sec, bottleneck: {bottleneck_device})"
         )
 
         return summary

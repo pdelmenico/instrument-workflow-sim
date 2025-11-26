@@ -1,0 +1,83 @@
+{
+  "workflow": {
+    "workflow_id": "single-sample-pcr-minimal",
+    "workflow_name": "Single Sample PCR - Minimal",
+    "workflow_version": "1.0",
+    "description": "Minimal PCR workflow for Phase 1a testing. One sample, two devices, all fixed timing.",
+    "devices": [
+      {
+        "device_id": "liquid_handler",
+        "device_name": "Liquid Handler",
+        "resource_capacity": 1,
+        "scheduling_policy": "FIFO"
+      },
+      {
+        "device_id": "thermal_cycler",
+        "device_name": "Thermal Cycler",
+        "resource_capacity": 1,
+        "scheduling_policy": "FIFO"
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "load_sample",
+        "operation_name": "Load Sample",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 5.0
+        },
+        "operation_type": "setup"
+      },
+      {
+        "operation_id": "add_reagent",
+        "operation_name": "Add PCR Reagent",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 8.0
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "amplify",
+        "operation_name": "PCR Amplification (35 cycles)",
+        "device_id": "thermal_cycler",
+        "timing": {
+          "type": "fixed",
+          "value": 3600.0
+        },
+        "operation_type": "processing"
+      }
+    ],
+    "base_sequence": [
+      {
+        "sequence_id": 1,
+        "operation_id": "load_sample",
+        "predecessors": []
+      },
+      {
+        "sequence_id": 2,
+        "operation_id": "add_reagent",
+        "predecessors": ["load_sample"]
+      },
+      {
+        "sequence_id": 3,
+        "operation_id": "amplify",
+        "predecessors": ["add_reagent"]
+      }
+    ]
+  },
+  "scenario": {
+    "scenario_id": "pcr-single-sample-run1",
+    "scenario_name": "PCR Single Sample - Run 1",
+    "workflow_id": "single-sample-pcr-minimal",
+    "sample_entry_pattern": {
+      "pattern_type": "single",
+      "num_samples": 1
+    },
+    "simulation_config": {
+      "random_seed": 42
+    }
+  }
+}

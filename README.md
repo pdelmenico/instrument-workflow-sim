@@ -2,11 +2,11 @@
 
 Discrete-event simulation engine for diagnostic and clinical chemistry instrument workflow timing analysis.
 
-## Project Status: Week 2 Complete ✅
+## Project Status: Week 3 Complete ✅ - Phase 1a DONE
 
-**Implementation:** Phase 1a - Weeks 1 & 2 (Core Classes + SimPy Integration)
-**Test Coverage:** 96% (144 tests passing)
-**Status:** Ready for Week 3 (API + Advanced Statistics)
+**Implementation:** Phase 1a Complete - All 3 Weeks (Core Classes + SimPy + Flask API)
+**Test Coverage:** 94% (165 tests passing)
+**Status:** Production-ready simulation engine with REST API
 
 ## What's Been Built
 
@@ -29,21 +29,42 @@ Discrete-event simulation engine for diagnostic and clinical chemistry instrumen
    - `WorkflowValidator` - Validates workflow JSON (schema, DAG, references)
    - `ScenarioValidator` - Validates scenario configurations
 
-4. **core.py** - SimPy simulation engine (NEW in Week 2!)
+4. **core.py** - SimPy simulation engine
    - `SimulationEngine` - Discrete-event simulation orchestration
    - Resource management with SimPy
    - Sample process coroutines
    - Event logging during execution
    - Deterministic simulations with random seeds
    - Support for device contention and queuing
+   - Full statistics computation (device utilization, queue stats, bottleneck identification)
+
+### Flask REST API (NEW in Week 3!)
+
+5. **main.py** - Flask application entry point
+   - Application factory pattern
+   - CORS support for web accessibility
+   - Blueprint registration
+
+6. **api/routes.py** - REST API endpoints
+   - `POST /api/simulate` - Execute simulation with workflow and scenario
+   - `GET /api/simulation/{run_id}/events` - Retrieve event log with filters
+   - `GET /api/simulation/{run_id}/summary` - Get summary statistics
+   - `GET /api/health` - Health check endpoint
+   - In-memory result storage (production would use database)
+
+### Example Workflows
+
+7. **examples/single_sample_pcr.json** - Single-sample PCR workflow
+8. **examples/synchronized_batch_analyzer.json** - 3-sample batch chemistry analyzer
 
 ### Test Suite
 
 - **23 tests** for data models
 - **29 tests** for timing distributions
 - **65 tests** for validators
-- **27 tests** for simulation engine (NEW!)
-- **Total: 144 tests** with 96% code coverage
+- **27 tests** for simulation engine
+- **21 tests** for Flask API (NEW!)
+- **Total: 165 tests** with 94% code coverage
 
 ## Installation
 
@@ -59,7 +80,11 @@ pip install -r requirements.txt
 pytest tests/ -v
 
 # Run tests with coverage
-pytest tests/ -v --cov=src/simulation --cov-report=term-missing
+pytest tests/ -v --cov=src/simulation --cov=api --cov-report=term-missing
+
+# Run Flask API server
+python main.py
+# Server will start on http://0.0.0.0:5000
 ```
 
 ## Usage Examples
@@ -155,6 +180,70 @@ event = SimulationEvent(
 )
 ```
 
+### Using the REST API
+
+```bash
+# Start the Flask server
+python main.py
+
+# In another terminal, run a simulation using curl
+curl -X POST http://localhost:5000/api/simulate \
+  -H "Content-Type: application/json" \
+  -d @examples/single_sample_pcr.json
+
+# Response will include run_id, execution time, and summary statistics
+
+# Get event log for a specific run
+curl http://localhost:5000/api/simulation/{run_id}/events
+
+# Get summary statistics
+curl http://localhost:5000/api/simulation/{run_id}/summary
+
+# Filter events by sample
+curl "http://localhost:5000/api/simulation/{run_id}/events?sample_id=SAMPLE_000"
+
+# Filter events by event type
+curl "http://localhost:5000/api/simulation/{run_id}/events?event_type=START"
+
+# Paginate events
+curl "http://localhost:5000/api/simulation/{run_id}/events?limit=10&offset=0"
+
+# Health check
+curl http://localhost:5000/api/health
+```
+
+### Running a Simulation Programmatically
+
+```python
+from src.simulation.core import SimulationEngine
+from src.simulation.validators import WorkflowValidator, ScenarioValidator
+import json
+
+# Load workflow and scenario
+with open('examples/single_sample_pcr.json') as f:
+    data = json.load(f)
+    workflow = data['workflow']
+    scenario = data['scenario']
+
+# Validate inputs
+workflow_validator = WorkflowValidator()
+workflow_result = workflow_validator.validate(workflow)
+
+scenario_validator = ScenarioValidator()
+scenario_result = scenario_validator.validate(scenario, workflow)
+
+if workflow_result.is_valid and scenario_result.is_valid:
+    # Run simulation
+    engine = SimulationEngine(workflow, scenario)
+    events, summary = engine.run()
+
+    print(f"Simulation completed in {summary.total_simulation_time:.2f}s")
+    print(f"Samples completed: {summary.num_samples_completed}")
+    print(f"Throughput: {summary.total_throughput:.6f} samples/sec")
+    print(f"Bottleneck device: {summary.bottleneck_device}")
+    print(f"Bottleneck utilization: {summary.bottleneck_utilization:.1%}")
+```
+
 ## Project Structure
 
 ```
@@ -164,15 +253,23 @@ instrument-workflow-sim/
 │       ├── __init__.py
 │       ├── models.py           # Data structures (23 tests)
 │       ├── timing.py           # Distribution sampling (29 tests)
-│       └── validators.py       # Input validation (65 tests)
+│       ├── validators.py       # Input validation (65 tests)
+│       └── core.py             # SimPy simulation engine (27 tests)
+├── api/
+│   ├── __init__.py
+│   └── routes.py               # Flask REST API routes (21 tests)
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py             # Shared fixtures
 │   ├── test_models.py
 │   ├── test_timing.py
-│   └── test_validators.py
-├── examples/                   # Example workflow JSON files
-├── api/                        # Flask API (Week 3)
+│   ├── test_validators.py
+│   ├── test_simulation_engine.py
+│   └── test_api.py
+├── examples/
+│   ├── single_sample_pcr.json
+│   └── synchronized_batch_analyzer.json
+├── main.py                     # Flask application entry point
 ├── requirements.txt
 ├── setup.py
 ├── .gitignore
@@ -224,22 +321,53 @@ Stochastic processes with high variability.
 | models.py | 76 | 97% |
 | timing.py | 45 | 100% |
 | validators.py | 205 | 93% |
-| core.py | 97 | 99% |
-| **Total** | **423** | **96%** |
+| core.py | 136 | 97% |
+| routes.py | 97 | 89% |
+| **Total** | **559** | **94%** |
 
-## Next Steps - Week 3
+## Phase 1a Deliverables ✅
 
-Implement Flask API and advanced statistics:
+All Phase 1a objectives completed:
 
-1. Create Flask REST API endpoints (POST /api/simulate)
-2. Implement full statistics computation in _compute_summary()
-   - Device utilization calculation
-   - Queue statistics (max queue length, average wait time)
-   - Operation statistics (mean, stdev, min, max, median)
-   - Bottleneck identification
-3. Add example workflow JSON files
-4. Create API integration tests
-5. Deploy to Railway (optional)
+1. ✅ **Core Data Structures** - Dataclasses for events, summaries, and validation
+2. ✅ **Timing Distributions** - Fixed, triangular, and exponential sampling
+3. ✅ **Input Validation** - Schema validation, DAG cycle detection, reference integrity
+4. ✅ **SimPy Integration** - Discrete-event simulation with resource contention
+5. ✅ **Event Logging** - Comprehensive event tracking (QUEUED, START, COMPLETE)
+6. ✅ **Statistics Computation** - Device utilization, queue stats, bottleneck identification
+7. ✅ **Flask REST API** - Four endpoints for simulation execution and results retrieval
+8. ✅ **Example Workflows** - PCR and chemistry analyzer workflows
+9. ✅ **Comprehensive Testing** - 165 tests with 94% coverage
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/simulate` | Execute simulation with workflow and scenario |
+| GET | `/api/simulation/{run_id}/events` | Retrieve event log (supports filters and pagination) |
+| GET | `/api/simulation/{run_id}/summary` | Get summary statistics for a completed simulation |
+| GET | `/api/health` | Health check endpoint |
+
+## Statistics Computed
+
+- **Device Utilization**: Fraction of time each device was busy (0-1 range, accounts for multi-capacity)
+- **Queue Statistics**: Max queue length, average wait time, total queue time per device
+- **Operation Statistics**: Mean, stdev, min, max, median duration, sample count per operation
+- **Bottleneck Identification**: Device with highest utilization and associated queue delay
+- **Cycle Time Metrics**: Mean, min, max sample cycle time
+- **Throughput**: Samples completed per unit time
+
+## Next Phase - Phase 1b (Future)
+
+Potential enhancements for Phase 1b:
+
+1. Stochastic entry patterns (Poisson arrivals, scheduled batches)
+2. Advanced scheduling policies (Priority, SJF, Resource optimization)
+3. Parallel operation support (DAG execution)
+4. Sample failure modeling and error scenarios
+5. Database persistence (PostgreSQL)
+6. Real-time simulation monitoring
+7. Visualization dashboard
 
 ## Development Commands
 
