@@ -230,6 +230,30 @@ def create_app():
                     border-radius: 4px;
                     border: 2px solid #333;
                 }
+                .graph-controls {
+                    display: flex;
+                    gap: 8px;
+                    margin-bottom: 12px;
+                    justify-content: flex-end;
+                }
+                .graph-control-btn {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                .graph-control-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }
+                .graph-control-btn:active {
+                    transform: translateY(0);
+                }
             </style>
         </head>
         <body>
@@ -451,6 +475,12 @@ def create_app():
                                 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 -960 960 960" style="fill: #bdc3c7; margin-bottom: 20px;"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Z"/></svg>
                                 <p style="font-size: 1.1rem; font-weight: 500;">Load a workflow to see the graph</p>
                                 <p style="font-size: 0.9rem; margin-top: 8px;">The workflow graph shows operations and their dependencies</p>
+                            </div>
+                            <div id="graphControls" class="graph-controls" style="display: none;">
+                                <button class="graph-control-btn" onclick="zoomIn()">🔍+ Zoom In</button>
+                                <button class="graph-control-btn" onclick="zoomOut()">🔍− Zoom Out</button>
+                                <button class="graph-control-btn" onclick="fitGraph()">⊡ Fit to Screen</button>
+                                <button class="graph-control-btn" onclick="resetGraph()">↻ Reset</button>
                             </div>
                             <div id="workflowGraph" style="display: none;"></div>
                             <div id="graphLegend" class="graph-legend" style="display: none;"></div>
@@ -738,13 +768,15 @@ def create_app():
 
                     if (elements.length === 0) {
                         document.getElementById('graphPlaceholder').style.display = 'block';
+                        document.getElementById('graphControls').style.display = 'none';
                         document.getElementById('workflowGraph').style.display = 'none';
                         document.getElementById('graphLegend').style.display = 'none';
                         return;
                     }
 
-                    // Hide placeholder, show graph
+                    // Hide placeholder, show graph and controls
                     document.getElementById('graphPlaceholder').style.display = 'none';
+                    document.getElementById('graphControls').style.display = 'flex';
                     document.getElementById('workflowGraph').style.display = 'block';
                     document.getElementById('graphLegend').style.display = 'flex';
 
@@ -837,6 +869,40 @@ def create_app():
                         `;
                         legendDiv.appendChild(item);
                     });
+                }
+
+                // Zoom control functions
+                function zoomIn() {
+                    if (cy) {
+                        const currentZoom = cy.zoom();
+                        cy.zoom({
+                            level: currentZoom * 1.2,
+                            renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                        });
+                    }
+                }
+
+                function zoomOut() {
+                    if (cy) {
+                        const currentZoom = cy.zoom();
+                        cy.zoom({
+                            level: currentZoom * 0.8,
+                            renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                        });
+                    }
+                }
+
+                function fitGraph() {
+                    if (cy) {
+                        cy.fit(null, 30); // 30px padding
+                    }
+                }
+
+                function resetGraph() {
+                    if (cy) {
+                        cy.fit(null, 30);
+                        cy.center();
+                    }
                 }
             </script>
         </body>
