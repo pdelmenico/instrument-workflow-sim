@@ -280,6 +280,7 @@ def create_app():
                                             <option value="">-- Select Example --</option>
                                             <option value="single_sample_pcr">Single Sample PCR</option>
                                             <option value="synchronized_batch_analyzer">Batch Analyzer (3 samples)</option>
+                                            <option value="dna_extraction_liquid_handler">DNA Extraction (8 samples)</option>
                                         </select>
                                     </div>
 

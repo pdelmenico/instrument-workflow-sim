@@ -1,0 +1,584 @@
+{
+  "workflow": {
+    "workflow_id": "dna_extraction_lh",
+    "workflow_name": "DNA Extraction on Liquid Handler",
+    "devices": [
+      {
+        "device_id": "liquid_handler",
+        "device_name": "Automated Liquid Handler",
+        "resource_capacity": 1,
+        "description": "Main liquid handling robot deck"
+      },
+      {
+        "device_id": "pipetter",
+        "device_name": "8-Channel Pipetter",
+        "resource_capacity": 1,
+        "description": "Air displacement pipetter (8 channels)"
+      },
+      {
+        "device_id": "tip_rack",
+        "device_name": "Tip Rack Station",
+        "resource_capacity": 8,
+        "description": "Pipette tip storage with multiple racks"
+      },
+      {
+        "device_id": "heater_shaker",
+        "device_name": "Heater Shaker Module",
+        "resource_capacity": 1,
+        "description": "On-deck heating and shaking module"
+      },
+      {
+        "device_id": "magnetic_module",
+        "device_name": "Magnetic Separation Module",
+        "resource_capacity": 1,
+        "description": "Magnetic bead separation module"
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "load_samples",
+        "operation_name": "Load Sample Plate",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 15
+        },
+        "operation_type": "setup"
+      },
+      {
+        "operation_id": "pickup_tips_1",
+        "operation_name": "Pick Up Tips (Round 1)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "transfer_sample_to_lysis",
+        "operation_name": "Transfer Sample to Lysis Buffer",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 25,
+          "mode": 30,
+          "max": 40
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_1",
+        "operation_name": "Discard Tips (Round 1)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "lysis_incubation",
+        "operation_name": "Lysis Incubation (56°C, 10min)",
+        "device_id": "heater_shaker",
+        "timing": {
+          "type": "fixed",
+          "value": 600
+        },
+        "operation_type": "incubation"
+      },
+      {
+        "operation_id": "pickup_tips_2",
+        "operation_name": "Pick Up Tips (Round 2)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "add_binding_buffer",
+        "operation_name": "Add Binding Buffer + Beads",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 30,
+          "mode": 35,
+          "max": 45
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_2",
+        "operation_name": "Discard Tips (Round 2)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "binding_incubation",
+        "operation_name": "Binding Incubation (RT, 5min)",
+        "device_id": "heater_shaker",
+        "timing": {
+          "type": "fixed",
+          "value": 300
+        },
+        "operation_type": "incubation"
+      },
+      {
+        "operation_id": "magnetic_capture_1",
+        "operation_name": "Magnetic Capture (Binding)",
+        "device_id": "magnetic_module",
+        "timing": {
+          "type": "triangular",
+          "min": 120,
+          "mode": 180,
+          "max": 240
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "pickup_tips_3",
+        "operation_name": "Pick Up Tips (Round 3)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "remove_supernatant_1",
+        "operation_name": "Remove Supernatant (Post-Binding)",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 20,
+          "mode": 25,
+          "max": 35
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_3",
+        "operation_name": "Discard Tips (Round 3)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "pickup_tips_4",
+        "operation_name": "Pick Up Tips (Round 4)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "wash_1",
+        "operation_name": "Wash 1 (Ethanol)",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 35,
+          "mode": 40,
+          "max": 50
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_4",
+        "operation_name": "Discard Tips (Round 4)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "magnetic_capture_2",
+        "operation_name": "Magnetic Capture (Wash 1)",
+        "device_id": "magnetic_module",
+        "timing": {
+          "type": "triangular",
+          "min": 60,
+          "mode": 90,
+          "max": 120
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "pickup_tips_5",
+        "operation_name": "Pick Up Tips (Round 5)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "remove_supernatant_2",
+        "operation_name": "Remove Supernatant (Wash 1)",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 20,
+          "mode": 25,
+          "max": 35
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_5",
+        "operation_name": "Discard Tips (Round 5)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "pickup_tips_6",
+        "operation_name": "Pick Up Tips (Round 6)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "wash_2",
+        "operation_name": "Wash 2 (Ethanol)",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 35,
+          "mode": 40,
+          "max": 50
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_6",
+        "operation_name": "Discard Tips (Round 6)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "magnetic_capture_3",
+        "operation_name": "Magnetic Capture (Wash 2)",
+        "device_id": "magnetic_module",
+        "timing": {
+          "type": "triangular",
+          "min": 60,
+          "mode": 90,
+          "max": 120
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "pickup_tips_7",
+        "operation_name": "Pick Up Tips (Round 7)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "remove_supernatant_3",
+        "operation_name": "Remove Supernatant (Wash 2)",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 20,
+          "mode": 25,
+          "max": 35
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_7",
+        "operation_name": "Discard Tips (Round 7)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "air_dry",
+        "operation_name": "Air Dry Beads (5min)",
+        "device_id": "magnetic_module",
+        "timing": {
+          "type": "fixed",
+          "value": 300
+        },
+        "operation_type": "incubation"
+      },
+      {
+        "operation_id": "pickup_tips_8",
+        "operation_name": "Pick Up Tips (Round 8)",
+        "device_id": "tip_rack",
+        "timing": {
+          "type": "triangular",
+          "min": 3,
+          "mode": 4,
+          "max": 6
+        },
+        "operation_type": "resource_acquisition"
+      },
+      {
+        "operation_id": "add_elution_buffer",
+        "operation_name": "Add Elution Buffer",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 20,
+          "mode": 25,
+          "max": 30
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "elution_incubation",
+        "operation_name": "Elution Incubation (RT, 5min)",
+        "device_id": "heater_shaker",
+        "timing": {
+          "type": "fixed",
+          "value": 300
+        },
+        "operation_type": "incubation"
+      },
+      {
+        "operation_id": "magnetic_capture_4",
+        "operation_name": "Magnetic Capture (Elution)",
+        "device_id": "magnetic_module",
+        "timing": {
+          "type": "triangular",
+          "min": 60,
+          "mode": 90,
+          "max": 120
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "transfer_to_collection",
+        "operation_name": "Transfer DNA to Collection Plate",
+        "device_id": "pipetter",
+        "timing": {
+          "type": "triangular",
+          "min": 25,
+          "mode": 30,
+          "max": 40
+        },
+        "operation_type": "processing"
+      },
+      {
+        "operation_id": "discard_tips_8",
+        "operation_name": "Discard Tips (Round 8)",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 3
+        },
+        "operation_type": "cleanup"
+      },
+      {
+        "operation_id": "unload_plate",
+        "operation_name": "Unload Collection Plate",
+        "device_id": "liquid_handler",
+        "timing": {
+          "type": "fixed",
+          "value": 10
+        },
+        "operation_type": "cleanup"
+      }
+    ],
+    "base_sequence": [
+      {
+        "operation_id": "load_samples",
+        "predecessors": []
+      },
+      {
+        "operation_id": "pickup_tips_1",
+        "predecessors": ["load_samples"]
+      },
+      {
+        "operation_id": "transfer_sample_to_lysis",
+        "predecessors": ["pickup_tips_1"]
+      },
+      {
+        "operation_id": "discard_tips_1",
+        "predecessors": ["transfer_sample_to_lysis"]
+      },
+      {
+        "operation_id": "lysis_incubation",
+        "predecessors": ["discard_tips_1"]
+      },
+      {
+        "operation_id": "pickup_tips_2",
+        "predecessors": ["lysis_incubation"]
+      },
+      {
+        "operation_id": "add_binding_buffer",
+        "predecessors": ["pickup_tips_2"]
+      },
+      {
+        "operation_id": "discard_tips_2",
+        "predecessors": ["add_binding_buffer"]
+      },
+      {
+        "operation_id": "binding_incubation",
+        "predecessors": ["discard_tips_2"]
+      },
+      {
+        "operation_id": "magnetic_capture_1",
+        "predecessors": ["binding_incubation"]
+      },
+      {
+        "operation_id": "pickup_tips_3",
+        "predecessors": ["magnetic_capture_1"]
+      },
+      {
+        "operation_id": "remove_supernatant_1",
+        "predecessors": ["pickup_tips_3"]
+      },
+      {
+        "operation_id": "discard_tips_3",
+        "predecessors": ["remove_supernatant_1"]
+      },
+      {
+        "operation_id": "pickup_tips_4",
+        "predecessors": ["discard_tips_3"]
+      },
+      {
+        "operation_id": "wash_1",
+        "predecessors": ["pickup_tips_4"]
+      },
+      {
+        "operation_id": "discard_tips_4",
+        "predecessors": ["wash_1"]
+      },
+      {
+        "operation_id": "magnetic_capture_2",
+        "predecessors": ["discard_tips_4"]
+      },
+      {
+        "operation_id": "pickup_tips_5",
+        "predecessors": ["magnetic_capture_2"]
+      },
+      {
+        "operation_id": "remove_supernatant_2",
+        "predecessors": ["pickup_tips_5"]
+      },
+      {
+        "operation_id": "discard_tips_5",
+        "predecessors": ["remove_supernatant_2"]
+      },
+      {
+        "operation_id": "pickup_tips_6",
+        "predecessors": ["discard_tips_5"]
+      },
+      {
+        "operation_id": "wash_2",
+        "predecessors": ["pickup_tips_6"]
+      },
+      {
+        "operation_id": "discard_tips_6",
+        "predecessors": ["wash_2"]
+      },
+      {
+        "operation_id": "magnetic_capture_3",
+        "predecessors": ["discard_tips_6"]
+      },
+      {
+        "operation_id": "pickup_tips_7",
+        "predecessors": ["magnetic_capture_3"]
+      },
+      {
+        "operation_id": "remove_supernatant_3",
+        "predecessors": ["pickup_tips_7"]
+      },
+      {
+        "operation_id": "discard_tips_7",
+        "predecessors": ["remove_supernatant_3"]
+      },
+      {
+        "operation_id": "air_dry",
+        "predecessors": ["discard_tips_7"]
+      },
+      {
+        "operation_id": "pickup_tips_8",
+        "predecessors": ["air_dry"]
+      },
+      {
+        "operation_id": "add_elution_buffer",
+        "predecessors": ["pickup_tips_8"]
+      },
+      {
+        "operation_id": "elution_incubation",
+        "predecessors": ["add_elution_buffer"]
+      },
+      {
+        "operation_id": "magnetic_capture_4",
+        "predecessors": ["elution_incubation"]
+      },
+      {
+        "operation_id": "transfer_to_collection",
+        "predecessors": ["magnetic_capture_4"]
+      },
+      {
+        "operation_id": "discard_tips_8",
+        "predecessors": ["transfer_to_collection"]
+      },
+      {
+        "operation_id": "unload_plate",
+        "predecessors": ["discard_tips_8"]
+      }
+    ]
+  },
+  "scenario": {
+    "scenario_id": "dna_extraction_8_samples",
+    "scenario_name": "DNA Extraction - 8 Samples",
+    "sample_entry_pattern": {
+      "type": "synchronized",
+      "interval_seconds": 0
+    },
+    "total_samples": 8,
+    "random_seed": 42
+  }
+}
