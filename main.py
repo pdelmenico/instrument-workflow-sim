@@ -795,7 +795,7 @@ def create_app():
                         ],
                         layout: {
                             name: 'dagre',
-                            rankDir: 'TB',
+                            rankDir: 'LR',
                             nodeSep: 50,
                             rankSep: 80,
                             padding: 30
