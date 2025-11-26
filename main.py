@@ -840,7 +840,12 @@ def create_app():
                             nodeSep: 50,
                             rankSep: 80,
                             padding: 30
-                        }
+                        },
+                        // Add explicit pan boundaries to prevent issues with LR layout
+                        panningEnabled: true,
+                        userPanningEnabled: true,
+                        autoungrabify: false,
+                        autounselectify: false
                     });
 
                     // Add tooltips
@@ -897,6 +902,48 @@ def create_app():
                             // Update last valid state
                             lastValidZoom = currentZoom;
                             lastValidPan = cy.pan();
+                        }
+                    });
+
+                    // Add pan constraints to handle LR layout issues
+                    cy.on('pan', function() {
+                        const pan = cy.pan();
+                        const zoom = cy.zoom();
+                        const extent = cy.extent();
+
+                        // Calculate valid pan boundaries based on graph extent
+                        const w = cy.width();
+                        const h = cy.height();
+                        const graphWidth = (extent.x2 - extent.x1) * zoom;
+                        const graphHeight = (extent.y2 - extent.y1) * zoom;
+
+                        // Allow some margin but prevent going too far off-screen
+                        const maxPanX = w / 2;
+                        const minPanX = w / 2 - graphWidth;
+                        const maxPanY = h / 2;
+                        const minPanY = h / 2 - graphHeight;
+
+                        let newPan = { ...pan };
+                        let needsAdjust = false;
+
+                        if (pan.x > maxPanX) {
+                            newPan.x = maxPanX;
+                            needsAdjust = true;
+                        } else if (pan.x < minPanX) {
+                            newPan.x = minPanX;
+                            needsAdjust = true;
+                        }
+
+                        if (pan.y > maxPanY) {
+                            newPan.y = maxPanY;
+                            needsAdjust = true;
+                        } else if (pan.y < minPanY) {
+                            newPan.y = minPanY;
+                            needsAdjust = true;
+                        }
+
+                        if (needsAdjust) {
+                            cy.pan(newPan);
                         }
                     });
 
