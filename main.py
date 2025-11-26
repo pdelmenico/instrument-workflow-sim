@@ -26,6 +26,14 @@ def create_app():
     # Register blueprints
     app.register_blueprint(api_bp)
 
+    @app.route('/examples/<filename>')
+    def serve_example(filename):
+        """Serve example workflow files."""
+        from flask import send_from_directory
+        import os
+        examples_dir = os.path.join(os.path.dirname(__file__), 'examples')
+        return send_from_directory(examples_dir, filename)
+
     @app.route('/')
     def index():
         """Root endpoint with HTML documentation."""
@@ -186,6 +194,11 @@ def create_app():
                     h1 { font-size: 1.8rem; }
                     .card-grid { grid-template-columns: 1fr; }
                 }
+                @media (max-width: 900px) {
+                    .card-content > div[style*="grid-template-columns"] {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
             </style>
         </head>
         <body>
@@ -197,22 +210,195 @@ def create_app():
                 </header>
 
                 <div class="card-grid">
-                    <!-- Quick Start Card -->
-                    <div class="card">
+                    <!-- Run Simulation Card - Full Width -->
+                    <div class="card" style="grid-column: 1 / -1;">
                         <div class="card-header">
                             <div class="card-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-200h80v-40h40q17 0 28.5-11.5T600-280v-120q0-17-11.5-28.5T560-440H440v-40h160v-80h-80v-40h-80v40h-40q-17 0-28.5 11.5T360-520v120q0 17 11.5 28.5T400-360h120v40H360v80h80v40ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-560v-160H240v640h480v-480H520ZM240-800v160-160 640-640Z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z"/></svg>
                             </div>
-                            <h2 class="card-title">Quick Start</h2>
+                            <h2 class="card-title">Run Simulation</h2>
                         </div>
                         <div class="card-content">
-                            <p><strong>1. Run a simulation:</strong></p>
-                            <div class="code-block">curl -X POST http://localhost:5001/api/simulate \\
-  -H "Content-Type: application/json" \\
-  -d @examples/single_sample_pcr.json</div>
-                            <p><strong>2. Get the <code>run_id</code> from response</strong></p>
-                            <p><strong>3. View visualizations:</strong></p>
-                            <div class="code-block">http://localhost:5001/api/simulation/{run_id}/visualize/dashboard</div>
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px;">
+                                <!-- Left: Controls -->
+                                <div>
+                                    <p style="margin-bottom: 12px;"><strong>Load workflow file:</strong></p>
+                                    <input type="file" id="workflowInput" accept=".json" style="display: none;">
+                                    <button type="button" onclick="document.getElementById('workflowInput').click()" style="
+                                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        color: white;
+                                        border: none;
+                                        padding: 12px 24px;
+                                        border-radius: 8px;
+                                        cursor: pointer;
+                                        font-weight: 600;
+                                        width: 100%;
+                                        margin-bottom: 12px;
+                                    ">Choose Workflow File</button>
+
+                                    <div style="margin-bottom: 16px;">
+                                        <p style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 8px;">Or load example:</p>
+                                        <select id="exampleSelect" style="
+                                            width: 100%;
+                                            padding: 10px;
+                                            border: 2px solid #e0e0e0;
+                                            border-radius: 6px;
+                                            font-size: 0.95rem;
+                                            margin-bottom: 12px;
+                                        ">
+                                            <option value="">-- Select Example --</option>
+                                            <option value="single_sample_pcr">Single Sample PCR</option>
+                                            <option value="synchronized_batch_analyzer">Batch Analyzer (3 samples)</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="workflowFileName" style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 16px; min-height: 20px;"></div>
+
+                                    <button id="runSimBtn" onclick="runSimulation()" disabled style="
+                                        background: #27ae60;
+                                        color: white;
+                                        border: none;
+                                        padding: 14px 28px;
+                                        border-radius: 8px;
+                                        cursor: pointer;
+                                        font-weight: 600;
+                                        width: 100%;
+                                        font-size: 1.1rem;
+                                        margin-bottom: 12px;
+                                    ">▶ Run Simulation</button>
+
+                                    <div id="simStatus" style="margin-top: 16px;"></div>
+                                </div>
+
+                                <!-- Right: JSON Editor -->
+                                <div>
+                                    <p style="margin-bottom: 8px;"><strong>Workflow & Scenario JSON:</strong></p>
+                                    <textarea id="jsonEditor" style="
+                                        width: 100%;
+                                        height: 400px;
+                                        font-family: 'Courier New', monospace;
+                                        font-size: 0.85rem;
+                                        padding: 12px;
+                                        border: 2px solid #e0e0e0;
+                                        border-radius: 8px;
+                                        resize: vertical;
+                                        background: #f8f9fa;
+                                    " placeholder="Load a workflow file or select an example..."></textarea>
+                                </div>
+                            </div>
+
+                            <script>
+                                let currentWorkflowData = null;
+
+                                // Handle workflow file upload
+                                document.getElementById('workflowInput').addEventListener('change', async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+
+                                    document.getElementById('workflowFileName').textContent = `Loaded: ${file.name}`;
+
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                        try {
+                                            currentWorkflowData = JSON.parse(event.target.result);
+                                            document.getElementById('jsonEditor').value = JSON.stringify(currentWorkflowData, null, 2);
+                                            document.getElementById('runSimBtn').disabled = false;
+                                        } catch (error) {
+                                            document.getElementById('simStatus').innerHTML =
+                                                `<p style="color: #e74c3c;">Error parsing JSON: ${error.message}</p>`;
+                                        }
+                                    };
+                                    reader.readAsText(file);
+                                });
+
+                                // Handle example selection
+                                document.getElementById('exampleSelect').addEventListener('change', async (e) => {
+                                    const example = e.target.value;
+                                    if (!example) return;
+
+                                    document.getElementById('simStatus').innerHTML = '<p style="color: #3498db;">Loading example...</p>';
+
+                                    try {
+                                        const response = await fetch(`/examples/${example}.json`);
+                                        if (!response.ok) throw new Error('Failed to load example');
+
+                                        currentWorkflowData = await response.json();
+                                        document.getElementById('jsonEditor').value = JSON.stringify(currentWorkflowData, null, 2);
+                                        document.getElementById('workflowFileName').textContent = `Loaded: ${example}.json`;
+                                        document.getElementById('runSimBtn').disabled = false;
+                                        document.getElementById('simStatus').innerHTML = '';
+                                    } catch (error) {
+                                        document.getElementById('simStatus').innerHTML =
+                                            `<p style="color: #e74c3c;">Error loading example: ${error.message}</p>`;
+                                    }
+                                });
+
+                                // Run simulation
+                                async function runSimulation() {
+                                    const statusDiv = document.getElementById('simStatus');
+                                    const runBtn = document.getElementById('runSimBtn');
+
+                                    // Update JSON from editor in case user edited it
+                                    try {
+                                        currentWorkflowData = JSON.parse(document.getElementById('jsonEditor').value);
+                                    } catch (error) {
+                                        statusDiv.innerHTML = `<p style="color: #e74c3c;">Invalid JSON: ${error.message}</p>`;
+                                        return;
+                                    }
+
+                                    runBtn.disabled = true;
+                                    statusDiv.innerHTML = '<p style="color: #3498db; font-weight: bold;">🔄 Running simulation...</p>';
+
+                                    try {
+                                        const response = await fetch('/api/simulate', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(currentWorkflowData)
+                                        });
+
+                                        const data = await response.json();
+
+                                        if (response.ok) {
+                                            statusDiv.innerHTML = `
+                                                <p style="color: #27ae60; font-weight: bold;">✓ Simulation complete!</p>
+                                                <p style="margin-top: 8px;">Run ID: <code>${data.run_id}</code></p>
+                                                <p style="margin-top: 4px;">Events: ${data.event_count} | Samples: ${data.summary.num_samples_completed}</p>
+                                                <p style="margin-top: 4px; color: #7f8c8d;">Opening dashboard...</p>
+                                            `;
+
+                                            // Auto-open dashboard after 1 second
+                                            setTimeout(() => {
+                                                window.open(`/api/simulation/${data.run_id}/visualize/dashboard`, '_blank');
+                                                statusDiv.innerHTML += `
+                                                    <p style="margin-top: 12px;">
+                                                        <a href="/api/simulation/${data.run_id}/visualize/dashboard"
+                                                           target="_blank"
+                                                           style="
+                                                               display: inline-block;
+                                                               padding: 10px 20px;
+                                                               background: #27ae60;
+                                                               color: white;
+                                                               text-decoration: none;
+                                                               border-radius: 6px;
+                                                               font-weight: 600;
+                                                           ">View Dashboard Again</a>
+                                                    </p>
+                                                `;
+                                            }, 1000);
+                                        } else {
+                                            statusDiv.innerHTML = `
+                                                <p style="color: #e74c3c; font-weight: bold;">✗ Simulation failed</p>
+                                                <p style="margin-top: 8px; color: #e74c3c;">${data.error_message || 'Unknown error'}</p>
+                                                ${data.errors ? `<ul style="margin-top: 8px; color: #e74c3c;">${data.errors.map(e => `<li>${e}</li>`).join('')}</ul>` : ''}
+                                            `;
+                                        }
+                                    } catch (error) {
+                                        statusDiv.innerHTML = `<p style="color: #e74c3c;">Request failed: ${error.message}</p>`;
+                                    } finally {
+                                        runBtn.disabled = false;
+                                    }
+                                }
+                            </script>
                         </div>
                     </div>
 
