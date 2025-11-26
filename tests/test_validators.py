@@ -482,7 +482,8 @@ class TestScenarioValidator:
 
     def test_optional_max_simulation_time(self, simple_scenario):
         """Test that max_simulation_time is optional."""
-        del simple_scenario["simulation_config"]["max_simulation_time"]
+        # Remove max_simulation_time if it exists
+        simple_scenario["simulation_config"].pop("max_simulation_time", None)
         validator = ScenarioValidator()
         result = validator.validate(simple_scenario)
 

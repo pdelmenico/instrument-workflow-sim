@@ -111,8 +111,7 @@ def simple_scenario() -> Dict[str, Any]:
             "num_samples": 1
         },
         "simulation_config": {
-            "random_seed": 42,
-            "max_simulation_time": 1000.0
+            "random_seed": 42
         }
     }
 
@@ -129,8 +128,7 @@ def synchronized_scenario() -> Dict[str, Any]:
             "num_samples": 3
         },
         "simulation_config": {
-            "random_seed": 123,
-            "max_simulation_time": 7200.0
+            "random_seed": 123
         }
     }
 
