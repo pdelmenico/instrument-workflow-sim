@@ -797,6 +797,9 @@ def create_app():
                         minZoom: 0.1,
                         maxZoom: 3,
                         wheelSensitivity: 0.2,
+                        userZoomingEnabled: true,
+                        userPanningEnabled: true,
+                        boxSelectionEnabled: false,
                         style: [
                             {
                                 selector: 'node',
@@ -861,12 +864,31 @@ def create_app():
                     });
 
                     // Enforce zoom limits on all zoom operations
-                    cy.on('zoom', function() {
+                    let isAdjustingZoom = false;
+                    cy.on('zoom', function(evt) {
+                        if (isAdjustingZoom) return;
+
                         const currentZoom = cy.zoom();
-                        if (currentZoom > 3) {
-                            cy.zoom(3);
-                        } else if (currentZoom < 0.1) {
-                            cy.zoom(0.1);
+                        const MIN_ZOOM = 0.1;
+                        const MAX_ZOOM = 3;
+
+                        if (currentZoom > MAX_ZOOM || currentZoom < MIN_ZOOM) {
+                            isAdjustingZoom = true;
+                            const clampedZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, currentZoom));
+
+                            // Get current viewport center
+                            const pan = cy.pan();
+                            const extent = cy.extent();
+                            const centerX = (extent.x1 + extent.x2) / 2;
+                            const centerY = (extent.y1 + extent.y2) / 2;
+
+                            // Set zoom to clamped value
+                            cy.viewport({
+                                zoom: clampedZoom,
+                                pan: pan
+                            });
+
+                            isAdjustingZoom = false;
                         }
                     });
 
