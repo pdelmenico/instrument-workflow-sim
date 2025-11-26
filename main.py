@@ -342,12 +342,53 @@ def create_app():
                                     " placeholder="Load a workflow file or select an example..."></textarea>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <script>
-                                let currentWorkflowData = null;
+                    <!-- Workflow Graph Card - Full Width -->
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T280-280q0-17-11.5-28.5T240-320q-17 0-28.5 11.5T200-280q0 17 11.5 28.5T240-240Zm480 0q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240ZM240-720q17 0 28.5-11.5T280-760q0-17-11.5-28.5T240-800q-17 0-28.5 11.5T200-760q0 17 11.5 28.5T240-720Zm280 240q17 0 28.5-11.5T560-520q0-17-11.5-28.5T520-560q-17 0-28.5 11.5T480-520q0 17 11.5 28.5T520-480Zm0-40Zm-40 240Zm240 0ZM480-760Z"/></svg>
+                            </div>
+                            <h2 class="card-title">Workflow Graph</h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="graphPlaceholder" style="text-align: center; padding: 100px 20px; color: #7f8c8d;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 -960 960 960" style="fill: #bdc3c7; margin-bottom: 20px;"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Z"/></svg>
+                                <p style="font-size: 1.1rem; font-weight: 500;">Load a workflow to see the graph</p>
+                                <p style="font-size: 0.9rem; margin-top: 8px;">The workflow graph shows operations and their dependencies</p>
+                            </div>
+                            <div id="graphControls" class="graph-controls" style="display: none;">
+                                <button class="graph-control-btn" onclick="zoomIn()">🔍+ Zoom In</button>
+                                <button class="graph-control-btn" onclick="zoomOut()">🔍− Zoom Out</button>
+                                <button class="graph-control-btn" onclick="fitGraph()">⊡ Fit to Screen</button>
+                                <button class="graph-control-btn" onclick="resetGraph()">↻ Reset</button>
+                                <span style="margin: 0 12px; color: #7f8c8d;">|</span>
+                                <button class="graph-control-btn" onclick="applyLayout('vertical')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M7 10l5 5 5-5H7z"/></svg>
+                                    Vertical
+                                </button>
+                                <button class="graph-control-btn" onclick="applyLayout('horizontal')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M14 7l-5 5 5 5V7z"/><path d="M3 7h2v10H3z"/></svg>
+                                    Horizontal
+                                </button>
+                                <button class="graph-control-btn" onclick="applyLayout('serpentine')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M3 7h2v10H3zm4 0h2v10H7zm4 0h2v10h-2zm4 0h2v10h-2zm4 0h2v10h-2z"/></svg>
+                                    Serpentine
+                                </button>
+                            </div>
+                            <div id="workflowGraph" style="display: none;"></div>
+                            <div id="graphLegend" class="graph-legend" style="display: none;"></div>
+                        </div>
+                    </div>
 
-                                // Handle workflow file upload
-                                document.getElementById('workflowInput').addEventListener('change', async (e) => {
+            <script>
+                // Combined script - all JavaScript in one block
+                let currentWorkflowData = null;
+
+                // Handle workflow file upload
+                document.getElementById('workflowInput').addEventListener('change', async (e) => {
                                     const file = e.target.files[0];
                                     if (!file) return;
 
@@ -458,47 +499,6 @@ def create_app():
                                         runBtn.disabled = false;
                                     }
                                 }
-                            </script>
-                        </div>
-                    </div>
-
-                    <!-- Workflow Graph Card - Full Width -->
-                    <div class="card" style="grid-column: 1 / -1;">
-                        <div class="card-header">
-                            <div class="card-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T280-280q0-17-11.5-28.5T240-320q-17 0-28.5 11.5T200-280q0 17 11.5 28.5T240-240Zm480 0q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240ZM240-720q17 0 28.5-11.5T280-760q0-17-11.5-28.5T240-800q-17 0-28.5 11.5T200-760q0 17 11.5 28.5T240-720Zm280 240q17 0 28.5-11.5T560-520q0-17-11.5-28.5T520-560q-17 0-28.5 11.5T480-520q0 17 11.5 28.5T520-480Zm0-40Zm-40 240Zm240 0ZM480-760Z"/></svg>
-                            </div>
-                            <h2 class="card-title">Workflow Graph</h2>
-                        </div>
-                        <div class="card-content">
-                            <div id="graphPlaceholder" style="text-align: center; padding: 100px 20px; color: #7f8c8d;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 -960 960 960" style="fill: #bdc3c7; margin-bottom: 20px;"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Z"/></svg>
-                                <p style="font-size: 1.1rem; font-weight: 500;">Load a workflow to see the graph</p>
-                                <p style="font-size: 0.9rem; margin-top: 8px;">The workflow graph shows operations and their dependencies</p>
-                            </div>
-                            <div id="graphControls" class="graph-controls" style="display: none;">
-                                <button class="graph-control-btn" onclick="zoomIn()">🔍+ Zoom In</button>
-                                <button class="graph-control-btn" onclick="zoomOut()">🔍− Zoom Out</button>
-                                <button class="graph-control-btn" onclick="fitGraph()">⊡ Fit to Screen</button>
-                                <button class="graph-control-btn" onclick="resetGraph()">↻ Reset</button>
-                                <span style="margin: 0 12px; color: #7f8c8d;">|</span>
-                                <button class="graph-control-btn" onclick="applyLayout('vertical')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M7 10l5 5 5-5H7z"/></svg>
-                                    Vertical
-                                </button>
-                                <button class="graph-control-btn" onclick="applyLayout('horizontal')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M14 7l-5 5 5 5V7z"/><path d="M3 7h2v10H3z"/></svg>
-                                    Horizontal
-                                </button>
-                                <button class="graph-control-btn" onclick="applyLayout('serpentine')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M3 7h2v10H3zm4 0h2v10H7zm4 0h2v10h-2zm4 0h2v10h-2zm4 0h2v10h-2z"/></svg>
-                                    Serpentine
-                                </button>
-                            </div>
-                            <div id="workflowGraph" style="display: none;"></div>
-                            <div id="graphLegend" class="graph-legend" style="display: none;"></div>
-                        </div>
-                    </div>
 
                     <!-- Core API Card -->
                     <div class="card">
@@ -697,10 +697,8 @@ def create_app():
                 </div>
             </div>
 
-            <script>
-                // Workflow graph visualization
+                // Workflow graph visualization (continuing combined script block)
                 let cy = null;
-                let currentWorkflowData = null;
                 let initialZoom = null;
                 let initialPan = null;
                 const deviceColors = {};
