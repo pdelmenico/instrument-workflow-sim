@@ -456,3 +456,141 @@ def visualize_dashboard(run_id: str):
     fig = create_dashboard(events, summary, title=f"Simulation Dashboard - {run_id}")
 
     return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/upload-results', methods=['POST'])
+def upload_results():
+    """Upload simulation results JSON file for visualization.
+
+    Request:
+        Form data with file upload (key: 'file')
+
+    Returns:
+        200 OK: File uploaded and processed successfully
+        {
+            "status": "success",
+            "run_id": "uploaded_...",
+            "message": "Results loaded successfully"
+        }
+
+        400 Bad Request: Invalid file or format
+        {
+            "status": "error",
+            "error_message": "..."
+        }
+    """
+    try:
+        # Check if file is in request
+        if 'file' not in request.files:
+            return jsonify({
+                "status": "error",
+                "error_message": "No file provided"
+            }), 400
+
+        file = request.files['file']
+
+        # Check if filename is present
+        if file.filename == '':
+            return jsonify({
+                "status": "error",
+                "error_message": "No file selected"
+            }), 400
+
+        # Check file extension
+        if not file.filename.endswith('.json'):
+            return jsonify({
+                "status": "error",
+                "error_message": "File must be a JSON file"
+            }), 400
+
+        # Read and parse JSON
+        import json
+        try:
+            data = json.load(file)
+        except json.JSONDecodeError as e:
+            return jsonify({
+                "status": "error",
+                "error_message": f"Invalid JSON format: {str(e)}"
+            }), 400
+
+        # Generate unique run ID for uploaded file
+        run_id = f"uploaded_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+
+        # Validate structure - check for required fields
+        required_fields = ['workflow', 'scenario', 'events', 'summary']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
+            return jsonify({
+                "status": "error",
+                "error_message": f"Missing required fields: {', '.join(missing_fields)}"
+            }), 400
+
+        # Convert events from dict to SimulationEvent objects
+        events = []
+        for event_dict in data['events']:
+            events.append(SimulationEvent(**event_dict))
+
+        # Convert summary from dict to SimulationSummary object
+        # Need to handle nested dataclasses
+        from src.simulation.models import DeviceQueueStats, OperationStats, OperationWaitStats
+
+        summary_dict = data['summary']
+
+        # Convert nested dataclasses
+        device_queue_stats = {}
+        for device_id, stats_dict in summary_dict['device_queue_stats'].items():
+            device_queue_stats[device_id] = DeviceQueueStats(**stats_dict)
+
+        operation_stats = {}
+        for op_id, stats_dict in summary_dict['operation_stats'].items():
+            operation_stats[op_id] = OperationStats(**stats_dict)
+
+        operation_wait_times = {}
+        for op_id, stats_dict in summary_dict['operation_wait_times'].items():
+            operation_wait_times[op_id] = OperationWaitStats(**stats_dict)
+
+        summary = SimulationSummary(
+            total_simulation_time=summary_dict['total_simulation_time'],
+            num_samples_completed=summary_dict['num_samples_completed'],
+            num_samples_failed=summary_dict['num_samples_failed'],
+            device_utilization=summary_dict['device_utilization'],
+            device_queue_stats=device_queue_stats,
+            operation_stats=operation_stats,
+            operation_wait_times=operation_wait_times,
+            total_throughput=summary_dict['total_throughput'],
+            mean_sample_cycle_time=summary_dict['mean_sample_cycle_time'],
+            min_sample_cycle_time=summary_dict['min_sample_cycle_time'],
+            max_sample_cycle_time=summary_dict['max_sample_cycle_time'],
+            bottleneck_device=summary_dict['bottleneck_device'],
+            bottleneck_utilization=summary_dict['bottleneck_utilization'],
+            bottleneck_queue_delay=summary_dict.get('bottleneck_queue_delay', 0.0)
+        )
+
+        # Store in simulation_results
+        simulation_results[run_id] = {
+            "run_id": run_id,
+            "workflow": data['workflow'],
+            "scenario": data['scenario'],
+            "events": events,
+            "summary": summary,
+            "execution_time": data.get('execution_time', 0.0),
+            "timestamp": data.get('timestamp', datetime.now().isoformat())
+        }
+
+        logger.info(f"Uploaded simulation results stored as {run_id}")
+
+        return jsonify({
+            "status": "success",
+            "run_id": run_id,
+            "message": "Results loaded successfully",
+            "event_count": len(events),
+            "samples_completed": summary.num_samples_completed
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Upload error: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "error_message": f"Failed to process file: {str(e)}"
+        }), 500
