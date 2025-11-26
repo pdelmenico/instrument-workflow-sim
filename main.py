@@ -794,7 +794,7 @@ def create_app():
                     cy = cytoscape({
                         container: document.getElementById('workflowGraph'),
                         elements: elements,
-                        minZoom: 0.1,
+                        minZoom: 0.3,
                         maxZoom: 3,
                         wheelSensitivity: 0.2,
                         userZoomingEnabled: true,
@@ -869,7 +869,7 @@ def create_app():
                         if (isAdjustingZoom) return;
 
                         const currentZoom = cy.zoom();
-                        const MIN_ZOOM = 0.1;
+                        const MIN_ZOOM = 0.3;
                         const MAX_ZOOM = 3;
 
                         if (currentZoom > MAX_ZOOM || currentZoom < MIN_ZOOM) {
@@ -910,7 +910,7 @@ def create_app():
                     // Store initial zoom and pan after layout, ensuring it respects limits
                     setTimeout(() => {
                         const currentZoom = cy.zoom();
-                        const MIN_ZOOM = 0.1;
+                        const MIN_ZOOM = 0.3;
                         const MAX_ZOOM = 3;
 
                         // If initial zoom is below minimum, adjust it
@@ -948,7 +948,7 @@ def create_app():
                 function zoomOut() {
                     if (cy) {
                         const currentZoom = cy.zoom();
-                        const newZoom = Math.max(currentZoom * 0.8, 0.1); // Min zoom 0.1x
+                        const newZoom = Math.max(currentZoom * 0.8, 0.3); // Min zoom 0.3x
                         cy.zoom({
                             level: newZoom,
                             renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
@@ -959,8 +959,17 @@ def create_app():
                 function fitGraph() {
                     if (cy) {
                         cy.fit(null, 30); // 30px padding
-                        // Update initial state to current fitted state
+                        // Ensure fit respects minimum zoom
                         setTimeout(() => {
+                            const currentZoom = cy.zoom();
+                            if (currentZoom < 0.3) {
+                                cy.zoom({
+                                    level: 0.3,
+                                    renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                                });
+                                cy.center();
+                            }
+                            // Update initial state to current fitted state
                             initialZoom = cy.zoom();
                             initialPan = { ...cy.pan() };
                         }, 50);
