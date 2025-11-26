@@ -482,9 +482,18 @@ def create_app():
                                 <button class="graph-control-btn" onclick="fitGraph()">⊡ Fit to Screen</button>
                                 <button class="graph-control-btn" onclick="resetGraph()">↻ Reset</button>
                                 <span style="margin: 0 12px; color: #7f8c8d;">|</span>
-                                <button class="graph-control-btn" onclick="applyLayout('vertical')">↓ Vertical</button>
-                                <button class="graph-control-btn" onclick="applyLayout('horizontal')">→ Horizontal</button>
-                                <button class="graph-control-btn" onclick="applyLayout('serpentine')">⤵ Serpentine</button>
+                                <button class="graph-control-btn" onclick="applyLayout('vertical')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M7 10l5 5 5-5H7z"/></svg>
+                                    Vertical
+                                </button>
+                                <button class="graph-control-btn" onclick="applyLayout('horizontal')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M14 7l-5 5 5 5V7z"/><path d="M3 7h2v10H3z"/></svg>
+                                    Horizontal
+                                </button>
+                                <button class="graph-control-btn" onclick="applyLayout('serpentine')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M3 7h2v10H3zm4 0h2v10H7zm4 0h2v10h-2zm4 0h2v10h-2zm4 0h2v10h-2z"/></svg>
+                                    Serpentine
+                                </button>
                             </div>
                             <div id="workflowGraph" style="display: none;"></div>
                             <div id="graphLegend" class="graph-legend" style="display: none;"></div>
@@ -691,6 +700,7 @@ def create_app():
             <script>
                 // Workflow graph visualization
                 let cy = null;
+                let currentWorkflowData = null;
                 let initialZoom = null;
                 let initialPan = null;
                 const deviceColors = {};
@@ -770,6 +780,9 @@ def create_app():
                 }
 
                 function renderWorkflowGraph(workflowData) {
+                    // Store workflow data for layout functions
+                    currentWorkflowData = workflowData;
+
                     const { elements, devices } = parseWorkflowToCytoscape(workflowData);
 
                     if (elements.length === 0) {
@@ -1043,7 +1056,7 @@ def create_app():
 
                 // Layout customization functions
                 function applyLayout(layoutType) {
-                    if (!cy) return;
+                    if (!cy || !currentWorkflowData) return;
 
                     const nodesPerRow = 6; // Configurable nodes per row for horizontal/serpentine
 
@@ -1059,9 +1072,17 @@ def create_app():
 
                     } else if (layoutType === 'horizontal') {
                         // Manual horizontal layout in rows
+                        // Create order map from workflow base_sequence
+                        const sequenceOrder = {};
+                        currentWorkflowData.workflow.base_sequence.forEach((step, index) => {
+                            sequenceOrder[step.operation_id] = index;
+                        });
+
                         const nodes = cy.nodes().sort((a, b) => {
-                            // Sort by topological order based on workflow sequence
-                            return a.id().localeCompare(b.id());
+                            // Sort by workflow sequence order
+                            const orderA = sequenceOrder[a.id()] !== undefined ? sequenceOrder[a.id()] : 999;
+                            const orderB = sequenceOrder[b.id()] !== undefined ? sequenceOrder[b.id()] : 999;
+                            return orderA - orderB;
                         });
 
                         const nodeWidth = 200;
@@ -1081,8 +1102,17 @@ def create_app():
 
                     } else if (layoutType === 'serpentine') {
                         // Serpentine/boustrophedon layout (zig-zag)
+                        // Create order map from workflow base_sequence
+                        const sequenceOrder = {};
+                        currentWorkflowData.workflow.base_sequence.forEach((step, index) => {
+                            sequenceOrder[step.operation_id] = index;
+                        });
+
                         const nodes = cy.nodes().sort((a, b) => {
-                            return a.id().localeCompare(b.id());
+                            // Sort by workflow sequence order
+                            const orderA = sequenceOrder[a.id()] !== undefined ? sequenceOrder[a.id()] : 999;
+                            const orderB = sequenceOrder[b.id()] !== undefined ? sequenceOrder[b.id()] : 999;
+                            return orderA - orderB;
                         });
 
                         const nodeWidth = 200;
