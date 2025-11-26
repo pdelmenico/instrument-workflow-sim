@@ -44,6 +44,9 @@ def create_app():
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Instrument Workflow Simulator</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
             <style>
                 * {
                     margin: 0;
@@ -198,6 +201,34 @@ def create_app():
                     .card-content > div[style*="grid-template-columns"] {
                         grid-template-columns: 1fr !important;
                     }
+                }
+                #workflowGraph {
+                    width: 100%;
+                    height: 500px;
+                    border: 2px solid #e0e0e0;
+                    border-radius: 8px;
+                    background: #fafafa;
+                }
+                .graph-legend {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                    margin-top: 12px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border-radius: 6px;
+                }
+                .legend-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 0.9rem;
+                }
+                .legend-color {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 4px;
+                    border: 2px solid #333;
                 }
             </style>
         </head>
@@ -402,6 +433,25 @@ def create_app():
                         </div>
                     </div>
 
+                    <!-- Workflow Graph Card - Full Width -->
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T280-280q0-17-11.5-28.5T240-320q-17 0-28.5 11.5T200-280q0 17 11.5 28.5T240-240Zm480 0q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240ZM240-720q17 0 28.5-11.5T280-760q0-17-11.5-28.5T240-800q-17 0-28.5 11.5T200-760q0 17 11.5 28.5T240-720Zm280 240q17 0 28.5-11.5T560-520q0-17-11.5-28.5T520-560q-17 0-28.5 11.5T480-520q0 17 11.5 28.5T520-480Zm0-40Zm-40 240Zm240 0ZM480-760Z"/></svg>
+                            </div>
+                            <h2 class="card-title">Workflow Graph</h2>
+                        </div>
+                        <div class="card-content">
+                            <div id="graphPlaceholder" style="text-align: center; padding: 100px 20px; color: #7f8c8d;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 -960 960 960" style="fill: #bdc3c7; margin-bottom: 20px;"><path d="M240-160q-50 0-85-35t-35-85q0-50 35-85t85-35q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-14 3-26.5t9-24.5L291-767q-12 6-24.5 9t-26.5 3q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q14 0 26.5 3t24.5 9l138-138q-6-12-9-24.5t-3-26.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-14 0-26.5-3t-24.5-9L631-567q6 12 9 24.5t3 26.5q0 14-3 26.5t-9 24.5l138 138q12-6 24.5-9t26.5-3q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-14 3-26.5t9-24.5L569-429q-12 6-24.5 9t-26.5 3q-14 0-26.5-3t-24.5-9L329-291q6 12 9 24.5t3 26.5q0 50-35 85t-85 35Z"/></svg>
+                                <p style="font-size: 1.1rem; font-weight: 500;">Load a workflow to see the graph</p>
+                                <p style="font-size: 0.9rem; margin-top: 8px;">The workflow graph shows operations and their dependencies</p>
+                            </div>
+                            <div id="workflowGraph" style="display: none;"></div>
+                            <div id="graphLegend" class="graph-legend" style="display: none;"></div>
+                        </div>
+                    </div>
+
                     <!-- Core API Card -->
                     <div class="card">
                         <div class="card-header">
@@ -598,6 +648,213 @@ def create_app():
                     </div>
                 </div>
             </div>
+
+            <script>
+                // Workflow graph visualization
+                let cy = null;
+                const deviceColors = {};
+                const colorPalette = [
+                    '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                    '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+                    '#a8edea', '#fed6e3', '#c471ed', '#12c2e9'
+                ];
+                let colorIndex = 0;
+
+                function getDeviceColor(deviceId) {
+                    if (!deviceColors[deviceId]) {
+                        deviceColors[deviceId] = colorPalette[colorIndex % colorPalette.length];
+                        colorIndex++;
+                    }
+                    return deviceColors[deviceId];
+                }
+
+                function parseWorkflowToCytoscape(workflowData) {
+                    if (!workflowData.workflow || !workflowData.workflow.operations) {
+                        return { elements: [], devices: {} };
+                    }
+
+                    const workflow = workflowData.workflow;
+                    const elements = [];
+                    const devices = {};
+
+                    // Create a map of operations
+                    const operationMap = {};
+                    workflow.operations.forEach(op => {
+                        operationMap[op.operation_id] = op;
+                        if (!devices[op.device_id]) {
+                            devices[op.device_id] = workflow.devices.find(d => d.device_id === op.device_id);
+                        }
+                    });
+
+                    // Create nodes for each operation
+                    workflow.operations.forEach(op => {
+                        let timingStr = '';
+                        if (op.timing.type === 'fixed') {
+                            timingStr = `Fixed: ${op.timing.value}s`;
+                        } else if (op.timing.type === 'triangular') {
+                            timingStr = `Tri: ${op.timing.min}-${op.timing.max}s`;
+                        } else if (op.timing.type === 'exponential') {
+                            timingStr = `Exp: μ=${op.timing.mean}s`;
+                        }
+
+                        elements.push({
+                            data: {
+                                id: op.operation_id,
+                                label: op.operation_name || op.operation_id,
+                                device: op.device_id,
+                                timing: timingStr,
+                                opType: op.operation_type || 'processing'
+                            }
+                        });
+                    });
+
+                    // Create edges based on base_sequence predecessors
+                    if (workflow.base_sequence) {
+                        workflow.base_sequence.forEach(step => {
+                            if (step.predecessors && step.predecessors.length > 0) {
+                                step.predecessors.forEach(predId => {
+                                    elements.push({
+                                        data: {
+                                            id: `${predId}-${step.operation_id}`,
+                                            source: predId,
+                                            target: step.operation_id
+                                        }
+                                    });
+                                });
+                            }
+                        });
+                    }
+
+                    return { elements, devices };
+                }
+
+                function renderWorkflowGraph(workflowData) {
+                    const { elements, devices } = parseWorkflowToCytoscape(workflowData);
+
+                    if (elements.length === 0) {
+                        document.getElementById('graphPlaceholder').style.display = 'block';
+                        document.getElementById('workflowGraph').style.display = 'none';
+                        document.getElementById('graphLegend').style.display = 'none';
+                        return;
+                    }
+
+                    // Hide placeholder, show graph
+                    document.getElementById('graphPlaceholder').style.display = 'none';
+                    document.getElementById('workflowGraph').style.display = 'block';
+                    document.getElementById('graphLegend').style.display = 'flex';
+
+                    // Reset color assignments
+                    Object.keys(deviceColors).forEach(key => delete deviceColors[key]);
+                    colorIndex = 0;
+
+                    // Initialize cytoscape
+                    if (cy) {
+                        cy.destroy();
+                    }
+
+                    cy = cytoscape({
+                        container: document.getElementById('workflowGraph'),
+                        elements: elements,
+                        style: [
+                            {
+                                selector: 'node',
+                                style: {
+                                    'label': 'data(label)',
+                                    'text-valign': 'center',
+                                    'text-halign': 'center',
+                                    'background-color': function(ele) {
+                                        return getDeviceColor(ele.data('device'));
+                                    },
+                                    'shape': 'roundrectangle',
+                                    'width': '180',
+                                    'height': '80',
+                                    'border-width': 3,
+                                    'border-color': '#333',
+                                    'color': '#fff',
+                                    'font-size': '14px',
+                                    'font-weight': 'bold',
+                                    'text-wrap': 'wrap',
+                                    'text-max-width': '160px'
+                                }
+                            },
+                            {
+                                selector: 'edge',
+                                style: {
+                                    'width': 3,
+                                    'line-color': '#95a5a6',
+                                    'target-arrow-color': '#95a5a6',
+                                    'target-arrow-shape': 'triangle',
+                                    'curve-style': 'bezier',
+                                    'arrow-scale': 1.5
+                                }
+                            }
+                        ],
+                        layout: {
+                            name: 'dagre',
+                            rankDir: 'TB',
+                            nodeSep: 50,
+                            rankSep: 80,
+                            padding: 30
+                        }
+                    });
+
+                    // Add tooltips
+                    cy.on('mouseover', 'node', function(evt) {
+                        const node = evt.target;
+                        const data = node.data();
+                        node.style({
+                            'border-width': 5,
+                            'border-color': '#000'
+                        });
+
+                        // Could add a proper tooltip here
+                        console.log(`${data.label}\nDevice: ${data.device}\nTiming: ${data.timing}\nType: ${data.opType}`);
+                    });
+
+                    cy.on('mouseout', 'node', function(evt) {
+                        evt.target.style({
+                            'border-width': 3,
+                            'border-color': '#333'
+                        });
+                    });
+
+                    // Build legend
+                    const legendDiv = document.getElementById('graphLegend');
+                    legendDiv.innerHTML = '<strong style="width: 100%; margin-bottom: 4px;">Devices:</strong>';
+
+                    Object.entries(devices).forEach(([deviceId, device]) => {
+                        const color = getDeviceColor(deviceId);
+                        const item = document.createElement('div');
+                        item.className = 'legend-item';
+                        item.innerHTML = `
+                            <div class="legend-color" style="background-color: ${color};"></div>
+                            <span><strong>${device.device_name || deviceId}</strong> (capacity: ${device.resource_capacity})</span>
+                        `;
+                        legendDiv.appendChild(item);
+                    });
+                }
+
+                // Hook into the workflow loader
+                const originalWorkflowHandler = document.getElementById('workflowInput').onchange;
+                document.getElementById('workflowInput').addEventListener('change', function(e) {
+                    // Wait a bit for currentWorkflowData to be set
+                    setTimeout(() => {
+                        if (currentWorkflowData) {
+                            renderWorkflowGraph(currentWorkflowData);
+                        }
+                    }, 100);
+                });
+
+                const originalExampleHandler = document.getElementById('exampleSelect').onchange;
+                document.getElementById('exampleSelect').addEventListener('change', function(e) {
+                    // Wait for the example to load
+                    setTimeout(() => {
+                        if (currentWorkflowData) {
+                            renderWorkflowGraph(currentWorkflowData);
+                        }
+                    }, 500);
+                });
+            </script>
         </body>
         </html>
         """
