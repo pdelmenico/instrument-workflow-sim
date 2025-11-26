@@ -10,6 +10,14 @@ from flask import Blueprint, request, jsonify
 from src.simulation.core import SimulationEngine
 from src.simulation.validators import WorkflowValidator, ScenarioValidator
 from src.simulation.models import SimulationEvent, SimulationSummary
+from src.simulation.visualization import (
+    create_gantt_chart,
+    create_utilization_chart,
+    create_queue_timeline,
+    create_sample_journey_chart,
+    create_operation_stats_chart,
+    create_dashboard
+)
 
 
 logger = logging.getLogger(__name__)
@@ -281,3 +289,170 @@ def health_check():
         "service": "instrument-workflow-simulator",
         "version": "1.0.0-phase1a"
     }), 200
+
+
+@api_bp.route('/simulation/<run_id>/visualize/gantt', methods=['GET'])
+def visualize_gantt(run_id: str):
+    """Generate Gantt chart visualization for a simulation run.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Returns:
+        200 OK: HTML with interactive Gantt chart
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    events = result['events']
+
+    fig = create_gantt_chart(events, title=f"Device Operations - {run_id}")
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/simulation/<run_id>/visualize/utilization', methods=['GET'])
+def visualize_utilization(run_id: str):
+    """Generate device utilization bar chart for a simulation run.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Returns:
+        200 OK: HTML with interactive utilization chart
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    summary = result['summary']
+
+    fig = create_utilization_chart(summary, title=f"Device Utilization - {run_id}")
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/simulation/<run_id>/visualize/queue', methods=['GET'])
+def visualize_queue(run_id: str):
+    """Generate queue length timeline for a simulation run.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Query Parameters:
+        device_id: Filter by specific device (optional)
+
+    Returns:
+        200 OK: HTML with interactive queue timeline
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    events = result['events']
+    device_id = request.args.get('device_id')
+
+    fig = create_queue_timeline(
+        events,
+        device_id=device_id,
+        title=f"Queue Length Over Time - {run_id}"
+    )
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/simulation/<run_id>/visualize/sample', methods=['GET'])
+def visualize_sample(run_id: str):
+    """Generate sample journey visualization for a simulation run.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Query Parameters:
+        sample_id: Filter by specific sample (optional)
+
+    Returns:
+        200 OK: HTML with interactive sample journey chart
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    events = result['events']
+    sample_id = request.args.get('sample_id')
+
+    fig = create_sample_journey_chart(
+        events,
+        sample_id=sample_id,
+        title=f"Sample Journey - {run_id}"
+    )
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/simulation/<run_id>/visualize/operations', methods=['GET'])
+def visualize_operations(run_id: str):
+    """Generate operation statistics chart for a simulation run.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Returns:
+        200 OK: HTML with interactive operation stats chart
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    summary = result['summary']
+
+    fig = create_operation_stats_chart(summary, title=f"Operation Statistics - {run_id}")
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
+
+
+@api_bp.route('/simulation/<run_id>/visualize/dashboard', methods=['GET'])
+def visualize_dashboard(run_id: str):
+    """Generate comprehensive dashboard with all visualizations.
+
+    Path Parameters:
+        run_id: Simulation run identifier
+
+    Returns:
+        200 OK: HTML with interactive dashboard
+        404 Not Found: Run ID does not exist
+    """
+    if run_id not in simulation_results:
+        return jsonify({
+            "status": "error",
+            "error_message": f"Simulation run '{run_id}' not found"
+        }), 404
+
+    result = simulation_results[run_id]
+    events = result['events']
+    summary = result['summary']
+
+    fig = create_dashboard(events, summary, title=f"Simulation Dashboard - {run_id}")
+
+    return fig.to_html(full_html=True, include_plotlyjs='cdn')
