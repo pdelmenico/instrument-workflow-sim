@@ -687,6 +687,8 @@ def create_app():
             <script>
                 // Workflow graph visualization
                 let cy = null;
+                let initialZoom = null;
+                let initialPan = null;
                 const deviceColors = {};
                 const colorPalette = [
                     '#667eea', '#764ba2', '#f093fb', '#4facfe',
@@ -858,6 +860,16 @@ def create_app():
                         });
                     });
 
+                    // Enforce zoom limits on all zoom operations
+                    cy.on('zoom', function() {
+                        const currentZoom = cy.zoom();
+                        if (currentZoom > 3) {
+                            cy.zoom(3);
+                        } else if (currentZoom < 0.1) {
+                            cy.zoom(0.1);
+                        }
+                    });
+
                     // Build legend
                     const legendDiv = document.getElementById('graphLegend');
                     legendDiv.innerHTML = '<strong style="width: 100%; margin-bottom: 4px;">Devices:</strong>';
@@ -872,6 +884,12 @@ def create_app():
                         `;
                         legendDiv.appendChild(item);
                     });
+
+                    // Store initial zoom and pan after layout
+                    setTimeout(() => {
+                        initialZoom = cy.zoom();
+                        initialPan = { ...cy.pan() };
+                    }, 100);
                 }
 
                 // Zoom control functions
@@ -900,13 +918,25 @@ def create_app():
                 function fitGraph() {
                     if (cy) {
                         cy.fit(null, 30); // 30px padding
+                        // Update initial state to current fitted state
+                        setTimeout(() => {
+                            initialZoom = cy.zoom();
+                            initialPan = { ...cy.pan() };
+                        }, 50);
                     }
                 }
 
                 function resetGraph() {
                     if (cy) {
-                        cy.fit(null, 30);
-                        cy.center();
+                        if (initialZoom && initialPan) {
+                            // Restore to initial state
+                            cy.zoom(initialZoom);
+                            cy.pan(initialPan);
+                        } else {
+                            // Fallback to fit
+                            cy.fit(null, 30);
+                            cy.center();
+                        }
                     }
                 }
             </script>
