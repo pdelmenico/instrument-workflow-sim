@@ -45,8 +45,8 @@ def create_app():
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Instrument Workflow Simulator</title>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
             <style>
                 * {
                     margin: 0;
