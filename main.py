@@ -907,8 +907,27 @@ def create_app():
                         legendDiv.appendChild(item);
                     });
 
-                    // Store initial zoom and pan after layout
+                    // Store initial zoom and pan after layout, ensuring it respects limits
                     setTimeout(() => {
+                        const currentZoom = cy.zoom();
+                        const MIN_ZOOM = 0.1;
+                        const MAX_ZOOM = 3;
+
+                        // If initial zoom is below minimum, adjust it
+                        if (currentZoom < MIN_ZOOM) {
+                            cy.zoom({
+                                level: MIN_ZOOM,
+                                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                            });
+                            cy.center();
+                        } else if (currentZoom > MAX_ZOOM) {
+                            cy.zoom({
+                                level: MAX_ZOOM,
+                                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+                            });
+                            cy.center();
+                        }
+
                         initialZoom = cy.zoom();
                         initialPan = { ...cy.pan() };
                     }, 100);
